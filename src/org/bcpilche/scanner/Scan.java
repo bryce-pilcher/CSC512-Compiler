@@ -56,11 +56,13 @@ public class Scan {
 		while(scanner.hasToken()){
 			Token t = scanner.getNextToken();
 			if(t != null){
-				//System.out.print(t.getTokenType());
+				System.out.print(t.getTokenType());
 				if(t.getTokenType() == TokenType.ID && !t.getToken().equals("main")){
 					outputFile.print("cs512");
+					System.out.print("cs512");
 				}
 				t.Print(outputFile);
+				System.out.print(t.getToken());
 			}
 		}
 		outputFile.close();

@@ -6,6 +6,7 @@ public class MetaToken implements Token{
 
 	TokenType type = TokenType.META;
 	String token = "";
+	int state = 0;
 	
 	@Override
 	public TokenType getTokenType() {
@@ -24,7 +25,31 @@ public class MetaToken implements Token{
 	
 	public boolean match(char c){
 		token += c;
-		if(token.indexOf('#') == 0 || token.indexOf('/') == 0){
+		switch (state) {
+		case 0:
+			if(token.indexOf('#') == 0){
+				state = 2;
+			}else if(token.indexOf('/') == 0){
+				state = 1;
+			}else{
+				state = -1;
+			}
+			break;
+			
+		case 1:
+			if(token.lastIndexOf('/') == 1){
+				state = 2;
+			}else{
+				state = -1;
+			}
+			break;
+		
+		case 2:
+			state = 2;
+			break;
+		}
+		
+		if(state > 0){
 			return true;
 		}
 		else{
@@ -34,9 +59,13 @@ public class MetaToken implements Token{
 	
 	@Override
 	public boolean match(String token) {
-		if(token.indexOf('#') == 0 || token.indexOf('/') == 0){
-			return true;
+		for(char c : token.toCharArray()){
+			if(!match(c)){
+				return false;
+			}
 		}
-		return false;
+		
+		this.token = token;
+		return true;
 	}
 }
