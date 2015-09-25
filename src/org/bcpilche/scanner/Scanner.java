@@ -76,17 +76,22 @@ public class Scanner {
 					}
 					program.mark(0);
 				}else{
-					token = token.substring(0, token.length() - 1);
-					for(Token t : pMatchingTokens){
+					if(token.length() > 1){
+					    token = token.substring(0, token.length() - 1);
+                    }
+					for(Token t : tokenDefs){
 						if(t.match(token)){
 							if(!matchingTokens.contains(t)){
 								matchingTokens.add(t);
 							}
 						}else{
 							matchingTokens.remove(t);
+                            pMatchingTokens.remove(t);
 						}
 					}
-					program.reset();
+                    if(matchingTokens.size() > 0 || pMatchingTokens.size() > 0) {
+                        program.reset();
+                    }
 					break;
 				}
 			}

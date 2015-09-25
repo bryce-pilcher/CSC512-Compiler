@@ -43,7 +43,7 @@ public class NumberToken implements Token{
 			break;
 
 		default:
-			if(Character.isAlphabetic(c)){
+			if(Character.isDigit(c)){
 				state = 1;
 			}else{
 				state = -1;
