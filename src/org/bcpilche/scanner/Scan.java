@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import org.bcpilche.scanner.Token.TokenType;
+import org.bcpilche.token.Token;
+import org.bcpilche.token.Token.TokenType;
 
 
 /**

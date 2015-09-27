@@ -1,4 +1,4 @@
-package org.bcpilche.scanner;
+package org.bcpilche.token;
 
 import java.io.PrintWriter;
 

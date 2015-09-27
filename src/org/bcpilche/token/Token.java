@@ -1,4 +1,4 @@
-package org.bcpilche.scanner;
+package org.bcpilche.token;
 
 import java.io.PrintWriter;
 
@@ -10,7 +10,8 @@ public interface Token {
 		RESERVED,
 		SYMBOL,
 		STRING,
-		META;
+		META,
+		EOF;
 	}
 	
 	public TokenType getTokenType();

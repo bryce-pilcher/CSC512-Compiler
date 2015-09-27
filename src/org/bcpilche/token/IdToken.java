@@ -1,10 +1,10 @@
-package org.bcpilche.scanner;
+package org.bcpilche.token;
 
 import java.io.PrintWriter;
 
-
-public class StringToken implements Token{
-	TokenType type = TokenType.STRING;
+public class IdToken implements Token{
+	
+	TokenType type = TokenType.ID;
 	String token = "";
 	int state = 0;
 	
@@ -26,7 +26,7 @@ public class StringToken implements Token{
 	public boolean match(char c){
 		switch (state) {
 		case 0:
-			if(c == '"'){
+			if(Character.isAlphabetic(c)){
 				state = 1;
 			}else{
 				state = -1;
@@ -34,15 +34,15 @@ public class StringToken implements Token{
 			break;
 		
 		case 1:
-			if(c == '"'){
-				state = 2;
-			}else{
+			if(Character.isAlphabetic(c) || Character.isDigit(c) || Character.isJavaIdentifierPart(c)){
 				state = 1;
+			}else{
+				state = -1;
 			}
 			break;
 
 		default:
-			if(c == '"'){
+			if(Character.isAlphabetic(c)){
 				state = 1;
 			}else{
 				state = -1;
@@ -64,10 +64,8 @@ public class StringToken implements Token{
 				return false;
 			}
 		}
-		if(state != 2){
-			return false;
-		}
 		this.token = token;
 		return true;
 	}
+
 }

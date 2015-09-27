@@ -1,5 +1,7 @@
 package org.bcpilche.scanner;
 
+import org.bcpilche.token.*;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -94,6 +96,9 @@ public class Scanner {
                     }
 					break;
 				}
+			}
+			if((r == -1) && matchingTokens.size() == 0){
+				return new EOFToken();
 			}
 			if(matchingTokens.size() > 0){
 				return matchingTokens.getFirst();

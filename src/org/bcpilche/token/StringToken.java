@@ -1,11 +1,10 @@
-package org.bcpilche.scanner;
+package org.bcpilche.token;
 
 import java.io.PrintWriter;
 
 
-public class NumberToken implements Token{
-
-	TokenType type = TokenType.NUMBER;
+public class StringToken implements Token{
+	TokenType type = TokenType.STRING;
 	String token = "";
 	int state = 0;
 	
@@ -27,7 +26,7 @@ public class NumberToken implements Token{
 	public boolean match(char c){
 		switch (state) {
 		case 0:
-			if(Character.isDigit(c)){
+			if(c == '"'){
 				state = 1;
 			}else{
 				state = -1;
@@ -35,15 +34,15 @@ public class NumberToken implements Token{
 			break;
 		
 		case 1:
-			if(Character.isDigit(c)){
-				state = 1;
+			if(c == '"'){
+				state = 2;
 			}else{
-				state = -1;
+				state = 1;
 			}
 			break;
 
 		default:
-			if(Character.isDigit(c)){
+			if(c == '"'){
 				state = 1;
 			}else{
 				state = -1;
@@ -64,6 +63,9 @@ public class NumberToken implements Token{
 			if(!match(c)){
 				return false;
 			}
+		}
+		if(state != 2){
+			return false;
 		}
 		this.token = token;
 		return true;

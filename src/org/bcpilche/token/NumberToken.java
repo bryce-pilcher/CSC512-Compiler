@@ -1,10 +1,11 @@
-package org.bcpilche.scanner;
+package org.bcpilche.token;
 
 import java.io.PrintWriter;
 
-public class IdToken implements Token{
-	
-	TokenType type = TokenType.ID;
+
+public class NumberToken implements Token{
+
+	TokenType type = TokenType.NUMBER;
 	String token = "";
 	int state = 0;
 	
@@ -26,7 +27,7 @@ public class IdToken implements Token{
 	public boolean match(char c){
 		switch (state) {
 		case 0:
-			if(Character.isAlphabetic(c)){
+			if(Character.isDigit(c)){
 				state = 1;
 			}else{
 				state = -1;
@@ -34,7 +35,7 @@ public class IdToken implements Token{
 			break;
 		
 		case 1:
-			if(Character.isAlphabetic(c) || Character.isDigit(c) || Character.isJavaIdentifierPart(c)){
+			if(Character.isDigit(c)){
 				state = 1;
 			}else{
 				state = -1;
@@ -42,7 +43,7 @@ public class IdToken implements Token{
 			break;
 
 		default:
-			if(Character.isAlphabetic(c)){
+			if(Character.isDigit(c)){
 				state = 1;
 			}else{
 				state = -1;
@@ -67,5 +68,4 @@ public class IdToken implements Token{
 		this.token = token;
 		return true;
 	}
-
 }

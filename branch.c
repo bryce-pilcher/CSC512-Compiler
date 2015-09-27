@@ -4,6 +4,7 @@
 
 int main() {
     int a, b;
+    int c;
     read(a);
     read(b);
     if (a>=b) {
