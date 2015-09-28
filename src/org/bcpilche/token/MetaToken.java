@@ -73,7 +73,9 @@ public class MetaToken implements Token {
                 return false;
             }
         }
-
+        if(state != 2){
+        	return false;
+        }
         this.token = token;
         return true;
     }

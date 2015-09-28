@@ -1,8 +1,5 @@
 package org.bcpilche.parser;
 
-import org.bcpilche.scanner.Scanner;
-import org.bcpilche.token.Token;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -48,23 +45,10 @@ public class Parse {
 
         Parser parser = new Parser(program, outputFile);
         int[] counts = parser.parse();
-
-        System.out.print("variable " + counts[0] + " function " + counts[1] + " statements " + counts[2]);
-
-        /*Scanner scanner = new Scanner(program);
-        while(scanner.hasToken()){
-            Token t = scanner.getNextToken();
-            if(t != null){
-                System.out.print(t.getTokenType());
-                if(t.getTokenType() == Token.TokenType.ID && !t.getToken().equals("main")){
-                    outputFile.print("cs512");
-                    System.out.print("cs512");
-                }
-                t.Print(outputFile);
-                System.out.print(t.getToken());
-            }
+        if(counts != null){
+        	System.out.print("Pass variable " + counts[0] + " function " + counts[1] + " statements " + counts[2]);
+        }else{
+        	System.out.print("Error");
         }
-        outputFile.close();*/
-
     }
 }
