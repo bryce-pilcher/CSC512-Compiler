@@ -7,22 +7,35 @@ import java.io.File;
 import java.io.PrintWriter;
 
 /**
- * Created by Bryce on 9/26/2015.
+ * This class is the parser that contains the grammar for
+ * parsing programs and reporting the number of variables,
+ * functions, and statements.  
+ * 
+ * 
+ * @author Bryce Pilcher
+ * @course CSC 512
+ * @assignment Project 1
  */
 public class Parser {
 
 	Scanner scanner;
 	PrintWriter outputFile;
 	Token token = null;
+	//Hold count of variables
 	int variables = 0;
+	//Hold count of functions
 	int functions = 0;
+	//Hold count of statements
 	int stmts = 0;
 
+	//Constructor for parser
 	public Parser(File program, PrintWriter outputfile){
 		scanner = new Scanner(program);
 		outputFile = outputfile;
 	}
 
+	//This method kicks off the program by calling
+	//the root of the grammar.
 	public int[] parse(){
 		boolean pass = program();
 		outputFile.close();
@@ -35,10 +48,13 @@ public class Parser {
 		}
 	}
 
+	//This method handles getting the next token in dealing 
+	//with spaces and meta tokens.  It also handles writing 
+	//the tokens out to file.  
 	private Token nextToken(){
 		if(token != null){
 			outputFile.print(token.getToken());
-			System.out.print(token.getToken());
+			//System.out.print(token.getToken());
 		}
 		token = scanner.getNextToken();
 		while((token == null || isMeta(token))){
@@ -67,7 +83,7 @@ public class Parser {
 		return true;
 	}
 
-	//<func list’> empty | <func decl’> <after func decl> 
+	//<func list prime> empty | <func decl prime> <after func decl> 
 	private boolean func_list_prime(){
 		if(func_decl_prime()){
 			if(after_func_decl()){
@@ -86,7 +102,7 @@ public class Parser {
 		return false;
 	}
 
-	//<after func decl> --> semicolon | left_brace <data decls'> <statements> right_brace
+	//<after func decl> --> semicolon | left_brace <data decls prime> <statements> right_brace
 	private boolean after_func_decl(){
 		if(isSymbol(token)) {
 			if(token.getToken().equals(";")){
@@ -122,7 +138,7 @@ public class Parser {
 		return false;
 	}
 
-	//<func decl’> --> <type name> ID left_parenthesis <parameter list> right_parenthesis
+	//<func decl prime> --> <type name> ID left_parenthesis <parameter list> right_parenthesis
 	private boolean func_decl_prime(){
 		if(type_name()){
 			if(isID(token)){
@@ -188,7 +204,7 @@ public class Parser {
 		return false;
 	}
 
-	//<non-empty list> --> <type name> ID <non-empty list’>
+	//<non-empty list> --> <type name> ID <non-empty list prime>
 	private boolean non_empty_list(){
 		if(parameter_type()){
 			if(isID(token)){
@@ -199,7 +215,7 @@ public class Parser {
 		return false;
 	}
 
-	//<non-empty list’> --> comma <type name> ID <non-empty list’>  | empty
+	//<non-empty list prime> --> comma <type name> ID <non-empty list prime>  | empty
 	private boolean non_empty_list_prime(){
 		if(isSymbol(token) && token.getToken().equals(",")){
 			token = nextToken();
@@ -219,7 +235,7 @@ public class Parser {
 		return true;
 	}
 
-	//<data decls> --> empty | <id after ID> <id list’> semicolon <data decls’>
+	//<data decls> --> empty | <id after ID> <id list prime> semicolon <data decls prime>
 	private boolean data_decls() {
 		if (id_after_id()){
 			if(id_list_prime()){
@@ -236,7 +252,7 @@ public class Parser {
 		return true;
 	}
 
-	//<data decls> --> empty | <type name> <id list> semicolon <data decls>
+	//<data decls prime> --> empty | <type name> <id list> semicolon <data decls>
 	private boolean data_decls_prime() {
 		if (type_name()){
 			if(id_list()){
@@ -253,7 +269,7 @@ public class Parser {
 		return true;
 	}
 
-	//<id list> --> <id> <id list’>
+	//<id list> --> <id> <id list prime>
 	private boolean id_list(){
 		if(id()){
 			return id_list_prime();
@@ -261,7 +277,7 @@ public class Parser {
 		return false;
 	}
 
-	//<id list’> --> comma <id> <id list’> | empty
+	//<id list prime> --> comma <id> <id list prime> | empty
 	private boolean id_list_prime(){
 		if(isSymbol(token) && token.getToken().equals(",")){
 			token = nextToken();
@@ -446,7 +462,7 @@ public class Parser {
 		return false;
 	}
 
-	//<non-empty expr list’> --> comma <expression> <non-empty expr list’> | empty
+	//<non-empty expr list prime> --> comma <expression> <non-empty expr list prime> | empty
 	private boolean non_empty_expr_list_prime(){
 		if(isSymbol(token) && token.getToken().equals(",")){
 			token = nextToken();
@@ -457,7 +473,7 @@ public class Parser {
 		}
 		return true;
 	}
-	//<after expression> --> <non-empty expr list’> | <comparison op> <expression>
+	//<after expression> --> <non-empty expr list prime> | <comparison op> <expression>
 	private boolean after_expression(){
 		if(comparison_op()){
 			return expression();
@@ -592,7 +608,7 @@ public class Parser {
 		return false;
 	}
 
-	//<expression> --> <term> <expression’>
+	//<expression> --> <term> <expression prime>
 	private boolean expression(){
 		if(term()){
 			return expression_prime();
@@ -600,7 +616,7 @@ public class Parser {
 		return false;
 	}
 
-	//<expression’> --> <addop> <term> <expression’> | empty
+	//<expression prime> --> <addop> <term> <expression prime> | empty
 	private boolean expression_prime(){
 		if(addop()){
 			if(term()){
@@ -619,7 +635,7 @@ public class Parser {
 		return false;
 	}
 
-	//<term> --> <factor> <term’>
+	//<term> --> <factor> <term prime>
 	private boolean term(){
 		if(factor()){
 			return term_prime();
@@ -627,7 +643,7 @@ public class Parser {
 		return false;
 	}
 
-	//<term’> --> <mulop> <factor> <term’> | empty
+	//<term prime> --> <mulop> <factor> <term prime> | empty
 	private boolean term_prime(){
 		if(mulop()){
 			if(factor()){

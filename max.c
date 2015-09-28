@@ -2,15 +2,18 @@
 #define read(x) scanf("%d",&x)
 #define write(x) printf("%d\n",x)
 
+int max(int a, int b) {
+    if (a>b) {
+        return a;
+    }
+    return b;
+}
+
 int main() {
-    int a, b;
+    int a,b;
     read(a);
     read(b);
-    if (a>=b) {
-        write(a);
-    }
-    if (b>a) {
-        write(b);
-    }
+
+    write(max(a,b));
 }
 

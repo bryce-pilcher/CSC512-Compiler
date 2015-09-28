@@ -41,7 +41,7 @@ public class SymbolToken implements Token{
                 state = -1;
                 break;
             case 2:
-                if(check.equals("==") ||   check.equals(">=") ||  check.equals("<=")){
+                if(check.equals("==") ||   check.equals(">=") ||  check.equals("<=") || check.equals("!=")){
                     state = 1;
                 }else{
                     state = -1;
@@ -69,7 +69,7 @@ public class SymbolToken implements Token{
     @Override
     public boolean match(String token) {
         if(token.equals("(") || token.equals(")") || token.equals("{") || token.equals("}") || token.equals("[") || token.equals("]") || token.equals(",") || token.equals(";") || token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/")
-                || token.equals("=") || token.equals("==") || token.equals("!") || token.equals(">") || token.equals(">=") || token.equals("<") || token.equals("<=") || token.equals("&") || token.equals("&&") || token.equals("|") || token.equals("||")){
+                || token.equals("=") || token.equals("==") || token.equals("!") || token.equals("!=") || token.equals(">") || token.equals(">=") || token.equals("<") || token.equals("<=") || token.equals("&") || token.equals("&&") || token.equals("|") || token.equals("||")){
             return true;
         }else{
             return false;

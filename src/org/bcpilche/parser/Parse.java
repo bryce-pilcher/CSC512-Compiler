@@ -42,7 +42,8 @@ public class Parse {
             System.out.println("Something happened in initializing the outputfile writer.");
             System.exit(1);
         }
-
+        
+        //Start the parser
         Parser parser = new Parser(program, outputFile);
         int[] counts = parser.parse();
         if(counts != null){

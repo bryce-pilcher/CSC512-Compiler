@@ -3,14 +3,8 @@
 #define write(x) printf("%d\n",x)
 
 int main() {
-    int a, b;
+    int a, sum;
     read(a);
-    read(b);
-    if (a>=b) {
-        write(a);
-    }
-    if (b>a) {
-        write(b);
-    }
+    sum = (a+1) *a / 2;
+    write(sum);
 }
-
