@@ -5,6 +5,7 @@ import org.bcpilche.token.Token;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Stack;
 
 /**
  * This class is the parser that contains the grammar for
@@ -14,13 +15,15 @@ import java.io.PrintWriter;
  * 
  * @author Bryce Pilcher
  * @course CSC 512
- * @assignment Project 1
+ * @assignment Project 2
  */
 public class Parser {
 
 	Scanner scanner;
 	PrintWriter outputFile;
 	Token token = null;
+	Stack<Token> tokenStack = new Stack<>();
+    SymbolTable symbolTable = new SymbolTable();
 	//Hold count of variables
 	int variables = 0;
 	//Hold count of functions
@@ -66,6 +69,8 @@ public class Parser {
 
 			token = scanner.getNextToken();
 		}
+		//System.out.print(token.getToken());
+        tokenStack.push(token);
 		return token;
 	}
 
@@ -110,6 +115,7 @@ public class Parser {
 				return true;
 			}else if(token.getToken().equals("{")){
 				token = nextToken();
+                symbolTable = new SymbolTable(symbolTable);
 				if(data_decls_prime()) {
 					if(statements()) {
 						if(isSymbol(token) && token.getToken().equals("}")){
@@ -142,7 +148,7 @@ public class Parser {
 	private boolean func_decl_prime(){
 		if(type_name()){
 			if(isID(token)){
-				token = scanner.getNextToken();
+                token = nextToken();
 				if(isSymbol(token) && token.getToken().equals("(")){
 					token = nextToken();
 					if(parameter_list()){
@@ -208,8 +214,9 @@ public class Parser {
 	private boolean non_empty_list(){
 		if(parameter_type()){
 			if(isID(token)){
+                System.out.print(" ->" + tokenStack.peek().getToken());
 				token = nextToken();
-				return non_empty_list_prime();
+                return non_empty_list_prime();
 			}
 		}
 		return false;
@@ -257,6 +264,7 @@ public class Parser {
 		if (type_name()){
 			if(id_list()){
 				if(isSymbol(token) && token.getToken().equals(";")) {
+                    //System.out.println("\n" + tokenStack.peek().getToken());
 					token = nextToken();
 					variables++;
 					return data_decls_prime();
@@ -294,6 +302,7 @@ public class Parser {
 	//<id> --> ID <after ID>
 	private boolean id(){
 		if(isID(token)){
+            System.out.println(getLocalVar(tokenStack.peek().getToken()) + "--->" + tokenStack.peek().getToken());
 			token = nextToken();
 			return id_after_id();
 		}
@@ -346,6 +355,7 @@ public class Parser {
 	// print left_parenthesis  STRING right_parenthesis semicolon
 	private boolean statement(){
 		if(isID(token)){
+            System.out.print(getLocalVar(tokenStack.peek().getToken()) + " " + tokenStack.peek().getToken());
 			token = nextToken();
 			return statement_after_id();
 		}else if(if_statement()){
@@ -421,6 +431,7 @@ public class Parser {
 	//<assignment> --> equal_sign <expression> semicolon
 	private boolean assignment(){
 		if(isSymbol(token) && token.getToken().equals("=")){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			if(expression()){
 				if(isSymbol(token) && token.getToken().equals(";")){
@@ -484,11 +495,18 @@ public class Parser {
 	//<if statement> --> if left_parenthesis <condition expression> right_parenthesis <block statements>
 	private boolean if_statement(){
 		if(isReserved(token) && token.getToken().equals("if")){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			if(isSymbol(token) && token.getToken().equals("(")){
+                System.out.print(tokenStack.peek().getToken());
 				token = nextToken();
 				if(condition_expression()){
 					if(isSymbol(token) && token.getToken().equals(")")){
+                        System.out.println(" " + tokenStack.peek().getToken() + " goto c" + symbolTable.getLabelCount() + ";");
+                        symbolTable.incLabelCount();
+                        System.out.println("goto c" + symbolTable.getLabelCount() + ";");
+                        symbolTable.incLabelCount();
+                        System.out.println("c" + (symbolTable.getLabelCount() - 2) + ":;");
 						token = nextToken();
 						return block_statements();
 					}
@@ -611,7 +629,9 @@ public class Parser {
 	//<expression> --> <term> <expression prime>
 	private boolean expression(){
 		if(term()){
-			return expression_prime();
+			if(expression_prime()){
+                return true;
+            }
 		}
 		return false;
 	}
@@ -620,6 +640,7 @@ public class Parser {
 	private boolean expression_prime(){
 		if(addop()){
 			if(term()){
+                System.out.println();
 				return expression_prime();
 			}
 			return false;
@@ -629,6 +650,7 @@ public class Parser {
 	//<addop> --> plus_sign | minus_sign
 	private boolean addop(){
 		if(isSymbol(token) && (token.getToken().equals("+") || token.getToken().equals("-"))){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			return true;
 		}
@@ -638,7 +660,9 @@ public class Parser {
 	//<term> --> <factor> <term prime>
 	private boolean term(){
 		if(factor()){
-			return term_prime();
+			if(term_prime()){
+                return true;
+            }
 		}
 		return false;
 	}
@@ -647,7 +671,9 @@ public class Parser {
 	private boolean term_prime(){
 		if(mulop()){
 			if(factor()){
-				return term_prime();
+				if(term_prime()){
+                    return true;
+                }
 			}
 			return false;
 		}
@@ -657,6 +683,7 @@ public class Parser {
 	//<mulop> --> star_sign | forward_slash
 	private boolean mulop(){
 		if(isSymbol(token) && (token.getToken().equals("*") || token.getToken().equals("/"))){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			return true;
 		}
@@ -666,14 +693,18 @@ public class Parser {
 	//<factor> --> ID <after ID> | NUMBER | minus_sign NUMBER | left_parenthesis <expression> right_parenthesis
 	private boolean factor(){
 		if(isID(token)){
+            System.out.print(getLocalVar(tokenStack.peek().getToken()) + " " + tokenStack.peek().getToken());
 			token = nextToken();
 			return factor_after_id();
 		}else if(isNumber(token)){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			return true;
 		}else if(isSymbol(token) && token.getToken().equals("-")){
+            System.out.print(" " + tokenStack.peek().getToken());
 			token = nextToken();
 			if(isNumber(token)){
+                System.out.print(" " + tokenStack.peek().getToken());
 				token = nextToken();
 				return true;
 			}
@@ -738,4 +769,23 @@ public class Parser {
 	private boolean isMeta(Token token){
 		return (token != null && token.getTokenType() == Token.TokenType.META);
 	}
+
+    private String getLocalVar(String var){
+        SymbolTable st = symbolTable;
+        String local = st.symbols.get(var);
+        while(local == null){
+            st = st.getParent();
+            if(st == null){
+                break;
+            }
+            local = st.symbols.get(var);
+        }
+
+        if(local == null){
+            local = "local[" + symbolTable.getLocalCount() + "]";
+            symbolTable.symbols.put(var,local);
+            symbolTable.incLocalCount();
+        }
+        return local;
+    }
 }

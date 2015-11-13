@@ -8,7 +8,7 @@ import java.util.HashSet;
 public class ReservedToken implements Token{
 	TokenType type = TokenType.RESERVED;
 	String token = "";
-	HashSet<String> reservedWords = new HashSet<String>(Arrays.asList("int","void","if ","while", "return", "read", "write", "print", "continue", "break", "binary", "decimal"));
+	HashSet<String> reservedWords = new HashSet<String>(Arrays.asList("int","void","if","while", "return", "read", "write", "print", "continue", "break", "binary", "decimal"));
 
 	@Override
 	public TokenType getTokenType() {
