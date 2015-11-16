@@ -16,9 +16,11 @@ public class SymbolTable {
         this.symbols = new HashMap<>();
     }
 
-    public SymbolTable(SymbolTable parent){
+    @SuppressWarnings("unchecked")
+	public SymbolTable(SymbolTable parent){
         this.parent = parent;
-        this.symbols = parent.getAllSymbols();
+        this.symbols = (HashMap<String, String>)parent.getAllSymbols().clone();
+        this.labelCount = parent.getLabelCount();
     }
 
     public HashMap<String, String> getAllSymbols(){
@@ -43,5 +45,8 @@ public class SymbolTable {
 
     public void incLabelCount() {
         this.labelCount++;
+    	if(parent != null){
+    		parent.incLabelCount();
+    	}
     }
 }

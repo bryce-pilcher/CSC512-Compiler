@@ -47,7 +47,7 @@ public class Parse {
         Parser parser = new Parser(program, outputFile);
         int[] counts = parser.parse();
         if(counts != null){
-        	System.out.print("Pass variable " + counts[0] + " function " + counts[1] + " statements " + counts[2]);
+        	//System.out.print("Pass variable " + counts[0] + " function " + counts[1] + " statements " + counts[2]);
         }else{
         	System.out.print("Error");
         }

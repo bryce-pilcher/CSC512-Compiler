@@ -9,12 +9,12 @@ int main() {
     read(b);
     read(c);
     if (a>=b) {
-	if (a>=c) {
-	    write(a);
-	}
-	if(c>a) {
-	    write(c);
-	}
+		if (a>=c) {
+	    	write(a);
+		}
+		if(c>a) {
+	    	write(c);
+		}
     }
     if (b>a && b>c) {
         write(b);
