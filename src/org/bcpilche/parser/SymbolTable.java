@@ -20,6 +20,7 @@ public class SymbolTable {
 	public SymbolTable(SymbolTable parent){
         this.parent = parent;
         this.symbols = (HashMap<String, String>)parent.getAllSymbols().clone();
+        this.localCount = parent.getLocalCount();
         this.labelCount = parent.getLabelCount();
     }
 

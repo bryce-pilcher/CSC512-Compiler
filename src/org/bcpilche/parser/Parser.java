@@ -121,12 +121,23 @@ public class Parser {
 				symbolTable = new SymbolTable(symbolTable);
 				if(data_decls_prime()) {
 					String param = "";
-					genStack.pop();
+					//genStack.pop();
+					String parameters = "";
 					while(!genStack.empty() && (param = genStack.peek()).length() > 0){
 						genStack.pop();
-						System.out.println(getLocalVar(param) + " = " + param + ";");
+						parameters += getLocalVar(param) + " = " + param + ";\n";
 					}
 					if(statements()) {
+						String st = "";
+						while(!genStack.empty()){
+							String pop = genStack.pop();
+							if(!pop.equals("")){
+								st = pop + "\n" + st;
+							}
+						}
+						System.out.println("int local[" + symbolTable.getLocalCount() + "];");
+						System.out.print(parameters);
+						System.out.print(st);
 						if(isSymbol(token) && token.getToken().equals("}")){
 							System.out.println(tokenStack.peek().getToken());
 							symbolTable = symbolTable.parent;
@@ -144,7 +155,8 @@ public class Parser {
 	//<func decl> --> left_parenthesis <parameter list> right_parenthesis
 	private boolean func_decl(){
 		if(isSymbol(token) && token.getToken().equals("(")){
-			System.out.print(tokenStack.peek().getToken());
+			String func = genStack.pop();
+			System.out.print(genStack.pop() + " " + func + tokenStack.peek().getToken());
 			token = nextToken();
 			if(parameter_list()){
 				if(isSymbol(token) && token.getToken().equals(")")){
@@ -160,8 +172,10 @@ public class Parser {
 	//<func decl prime> --> <type name> ID left_parenthesis <parameter list> right_parenthesis
 	private boolean func_decl_prime(){
 		if(type_name()){
+			genStack.pop();
 			if(isID(token)){
 				String funcName = tokenStack.pop().getToken();
+				System.out.print(tokenStack.pop().getToken() + " ");
 				System.out.print(funcName);
 				token = nextToken();
 				if(isSymbol(token) && token.getToken().equals("(")){
@@ -185,7 +199,7 @@ public class Parser {
 		if(type_name()){
 			if(isID(token)){
 				String funcName = tokenStack.pop().getToken();
-				System.out.print(funcName);
+				genStack.push(funcName);
 				token = nextToken();
 				return data_or_func();
 			}
@@ -203,7 +217,7 @@ public class Parser {
 		if(isReserved(token)){
 			String type = token.getToken();
 			if(type.equals("int") || type.equals("void") || type.equals("binary") || type.equals("decimal")){
-				System.out.print(tokenStack.peek().getToken() + " ");
+				genStack.push(tokenStack.peek().getToken());
 				token = nextToken();
 				return true;
 			}
@@ -292,8 +306,12 @@ public class Parser {
 	//<data decls> --> empty | <id after ID> <id list prime> semicolon <data decls prime>
 	private boolean data_decls() {
 		if (id_after_id()){
+			genStack.pop();
 			if(id_list_prime()){
 				if(isSymbol(token) && token.getToken().equals(";")) {
+					getLocalVar(genStack.pop());
+					genStack.clear();
+					//System.out.println(";");
 					token = nextToken();
 					variables++;
 					return data_decls_prime();
@@ -310,8 +328,9 @@ public class Parser {
 	private boolean data_decls_prime() {
 		if (type_name()){
 			if(id_list()){
-				if(isSymbol(token) && token.getToken().equals(";")) {
-					//System.out.println("\n" + tokenStack.peek().getToken());
+				if(isSymbol(token) && token.getToken().equals(";")) {	
+					getLocalVar(genStack.pop());
+					genStack.pop();				
 					token = nextToken();
 					variables++;
 					return data_decls_prime();
@@ -335,6 +354,7 @@ public class Parser {
 	//<id list prime> --> comma <id> <id list prime> | empty
 	private boolean id_list_prime(){
 		if(isSymbol(token) && token.getToken().equals(",")){
+			getLocalVar(genStack.pop());
 			token = nextToken();
 			if(id()){
 				variables++;
@@ -349,9 +369,10 @@ public class Parser {
 	//<id> --> ID <after ID>
 	private boolean id(){
 		if(isID(token)){
-			System.out.println(getLocalVar(tokenStack.peek().getToken()) + ";");
+			genStack.push(token.getToken());
 			token = nextToken();
 			if(id_after_id()){
+				genStack.pop();
 				return true;
 			}
 		}
@@ -360,16 +381,11 @@ public class Parser {
 
 	//<id after ID> --> left_bracket <expression> right_bracket | empty
 	private boolean id_after_id(){
-		String gen = "";
 		if(isSymbol(token) && token.getToken().equals("[")){
-			//gen += tokenStack.peek().getToken();
 			token = nextToken();
 			if(expression()){
-				gen += genStack.pop();
 				if(isSymbol(token) && token.getToken().equals("]")) {
-					//gen += tokenStack.peek().getToken();
 					token = nextToken();
-					//genStack.push(gen);
 					return true;
 				}else{
 					return false;
@@ -405,16 +421,16 @@ public class Parser {
 	private boolean statements(){
 		String gen = "";
 		if(statement()){
-			gen += genStack.pop();
+			//gen += genStack.pop();
 			stmts++;
 			if(statements()){
-				gen += genStack.pop();
-				genStack.push(gen);
+				//gen += genStack.pop();
+				//genStack.push(gen);
 				return true;
 			}
 			return false;
 		}
-		genStack.push("");
+		//genStack.push("");
 		return true;
 	}
 
@@ -431,8 +447,7 @@ public class Parser {
 				String af_id = genStack.pop();
 				String id = genStack.pop();
 				gen += id + af_id;
-				genStack.push("");
-				System.out.println(gen);
+				genStack.push(gen);
 				return true;
 			}
 			return false;
@@ -440,9 +455,7 @@ public class Parser {
 			return true;
 		}else if(while_statement()){
 			return true;
-		}else if(return_statement()) {
-			System.out.println(genStack.pop());
-			genStack.push("");
+		}else if(return_statement()){
 			return true;
 		}else if(break_statement()){
 			return true;
@@ -464,8 +477,7 @@ public class Parser {
 							if (isSymbol(token) && token.getToken().equals(";")) {
 								gen += tokenStack.peek().getToken();
 								token = nextToken();
-								genStack.push("");
-								System.out.println(gen);
+								genStack.push(gen);
 								return true;
 							}
 						}
@@ -485,8 +497,7 @@ public class Parser {
 							if (isSymbol(token) && token.getToken().equals(";")) {
 								gen += tokenStack.peek().getToken();
 								token = nextToken();
-								System.out.println(gen);
-								genStack.push("");
+								genStack.push(gen);
 								return true;
 							}
 						}
@@ -506,8 +517,7 @@ public class Parser {
 							token = nextToken();
 							if (isSymbol(token) && token.getToken().equals(";")) {
 								gen += tokenStack.peek().getToken();
-								genStack.push("");
-								System.out.println(gen);
+								genStack.push(gen);
 								token = nextToken();
 								return true;
 							}
@@ -534,8 +544,10 @@ public class Parser {
 		genStack.push(getLocalVar(id));
 		id_after_id();
 		gen += genStack.pop();
+		id = genStack.pop();
 		if(assignment()){
 			gen += genStack.pop();
+			genStack.push(id);
 			genStack.push(gen);
 			return true;
 		};
@@ -547,7 +559,7 @@ public class Parser {
 		String gen = "";
 		if(isSymbol(token) && token.getToken().equals("=")){
 			//System.out.print(" " + tokenStack.peek().getToken());
-			gen += " " + tokenStack.peek().getToken();
+			gen += " " + tokenStack.peek().getToken() + " ";
 			token = nextToken();
 			if(expression()){
 				gen += genStack.pop();
@@ -571,7 +583,6 @@ public class Parser {
 				gen += genStack.pop();
 				if(isSymbol(token) && token.getToken().equals(")")){
 					gen += tokenStack.peek().getToken();
-					//System.out.print(tokenStack.peek().getToken());
 					token = nextToken();
 					if(isSymbol(token) && token.getToken().equals(";")){
 						gen += tokenStack.peek().getToken();
@@ -663,14 +674,13 @@ public class Parser {
 						String el_label = "c" + symbolTable.getLabelCount();
 						gen += "goto " + el_label + ";\n";
 						symbolTable.incLabelCount();
-						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;";
-						System.out.println(gen);
+						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;\n";
+						//genStack.push(gen);
 						token = nextToken();
 						if(block_statements()){
-							gen = genStack.pop();
+							gen += genStack.pop()+ "\n";
 							gen += el_label + ":;";
-							genStack.push("");
-							System.out.println(gen);
+							genStack.push(gen);
 							return true;
 						}
 					}
@@ -689,12 +699,13 @@ public class Parser {
 				if(genStack.peek().length() > 0){
 					String loc1 = "local[" + symbolTable.getLocalCount() + "]";
 					symbolTable.incLocalCount();
-					System.out.println(loc1 + " = " + gen + ";");
 					String cond2 = genStack.pop();
+					String comp_op = genStack.pop();
+					genStack.push(loc1 + " = " + gen + ";");
 					String loc2 = "local[" + symbolTable.getLocalCount() + "]";
 					symbolTable.incLocalCount();
-					System.out.println(loc2 + " = " + cond2 + ";");
-					genStack.push(loc1 + genStack.pop() + loc2);
+					genStack.push(loc2 + " = " + cond2 + ";");
+					genStack.push(loc1 + comp_op + loc2);
 				}
 				else{
 					genStack.push(gen);
@@ -774,14 +785,13 @@ public class Parser {
 						gen += "goto c" + symbolTable.getLabelCount() + ";\n";
 						symbolTable.incLabelCount();
 						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;";
-						System.out.println(gen);
+						//System.out.println(gen);
 						token = nextToken();
 						if(block_statements()){
-							gen = genStack.pop();
+							gen += genStack.pop();
 							gen += "goto " + label + ";";
 							gen += "c" + (lCount + 2) + ":;";
-							genStack.push("");
-							System.out.println(gen);
+							genStack.push(gen);
 							return true;
 						}
 					}
@@ -795,10 +805,10 @@ public class Parser {
 	private boolean return_statement(){
 		String gen = "";
 		if(isReserved(token) && token.getToken().equals("return")){
-			gen += tokenStack.peek().getToken() + " ";
+			gen += tokenStack.peek().getToken();
 			token = nextToken();
 			if(after_return()){
-				gen += genStack.pop();
+				gen += " " + genStack.pop();
 				genStack.push(gen);
 				return true;
 			}
@@ -813,8 +823,9 @@ public class Parser {
 			gen += genStack.pop();
 			if(isNumeric(gen)){
 				String loc = "local[" + symbolTable.getLocalCount() + "]";
-				System.out.println(loc + " = " + gen + ";");
-				gen = loc;
+				genStack.push(loc + " = " + gen + ";");
+				gen = " " + loc;
+				genStack.push(gen);
 			}
 			if(isSymbol(token) && token.getToken().equals(";")){
 				gen += ";";
@@ -869,7 +880,7 @@ public class Parser {
 					String loc = "local[" + symbolTable.getLocalCount() + "]";
 					gen = loc + " = " + gen;
 					symbolTable.incLocalCount();
-					System.out.println(gen);
+					genStack.push(gen.toString());
 					gen = loc;
 				}
 				genStack.push(gen);
@@ -893,7 +904,7 @@ public class Parser {
 						String loc = "local[" + symbolTable.getLocalCount() + "]";
 						gen = loc + " = " + gen;
 						symbolTable.incLocalCount();
-						System.out.println(gen);
+						genStack.push(gen.toString());
 						gen = " + " + loc;
 					}
 					genStack.push(gen);
@@ -927,7 +938,7 @@ public class Parser {
 					String loc = "local[" + symbolTable.getLocalCount() + "]";
 					gen = loc + " = " + gen;
 					symbolTable.incLocalCount();
-					System.out.println(gen);
+					genStack.push(gen.toString());
 					gen = loc;
 				}
 				genStack.push(gen);
@@ -951,7 +962,7 @@ public class Parser {
 						String loc = "local[" + symbolTable.getLocalCount() + "]";
 						gen = loc + " = " + gen;
 						symbolTable.incLocalCount();
-						System.out.println(gen);
+						genStack.push(gen.toString());
 						gen = " * " + loc;
 					}
 					genStack.push(gen);
@@ -984,9 +995,6 @@ public class Parser {
 			if(factor_after_id()){
 				String fac_af_id = genStack.pop();
 				gen += fac_af_id;
-				if(fac_af_id.length() > 0){
-					//System.out.println(gen);
-				}
 				genStack.push(gen);
 				return true;
 			}
@@ -1032,8 +1040,8 @@ public class Parser {
 				if(isSymbol(token) && token.getToken().equals(")")){
 					gen += ");";
 					token = nextToken();
+					genStack.push(gen);
 					genStack.push(loc);
-					System.out.println(gen);
 					return true;
 				}
 			}

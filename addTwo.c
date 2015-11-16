@@ -9,9 +9,11 @@ int add(int a) {
 }
 
 int main() {
-  int a, b[0];
+  int a, b;
+  read(a);
   c = 1 + 2 * 3 * (4 + 5) * 6;
   d = 1 * 2 * 3;
-  read(a);
-  write(add(b[2+3]));
+  write(add(a));
+  write(c+d);
 }
+
