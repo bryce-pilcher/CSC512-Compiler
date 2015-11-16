@@ -674,12 +674,11 @@ public class Parser {
 						String el_label = "c" + symbolTable.getLabelCount();
 						gen += "goto " + el_label + ";\n";
 						symbolTable.incLabelCount();
-						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;\n";
-						//genStack.push(gen);
+						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;";
+						genStack.push(gen);
 						token = nextToken();
 						if(block_statements()){
-							gen += genStack.pop()+ "\n";
-							gen += el_label + ":;";
+							gen = el_label + ":;";
 							genStack.push(gen);
 							return true;
 						}
@@ -785,11 +784,12 @@ public class Parser {
 						gen += "goto c" + symbolTable.getLabelCount() + ";\n";
 						symbolTable.incLabelCount();
 						gen += "c" + (symbolTable.getLabelCount() - 2) + ":;";
-						//System.out.println(gen);
+						genStack.push(gen);
 						token = nextToken();
+						genStack.push("scope");
 						if(block_statements()){
-							gen += genStack.pop();
-							gen += "goto " + label + ";";
+							replaceBreakAndContinue(lCount);
+							gen = "goto " + label + ";\n";
 							gen += "c" + (lCount + 2) + ":;";
 							genStack.push(gen);
 							return true;
@@ -1117,5 +1117,23 @@ public class Parser {
 			return false;
 		}
 		return true;
+	}
+	
+	private void replaceBreakAndContinue(int lCount){
+		Stack<String> holder = new Stack<>();
+		String gen = "";
+		while(!(gen = genStack.pop()).equals("scope")){
+			if(gen.equals("break;")){
+				holder.push("goto c" + (lCount + 2) + ";");
+			}else if(gen.equals("continue;")){
+				holder.push("goto c" + (lCount) + ";");
+			}else{
+				holder.push(gen);
+			}
+		}
+		
+		while(!holder.empty()){
+			genStack.push(holder.pop());
+		}
 	}
 }
