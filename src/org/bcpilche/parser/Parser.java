@@ -57,13 +57,13 @@ public class Parser {
 	//the tokens out to file.  
 	private Token nextToken(){
 		if(token != null){
-			outputFile.print(token.getToken());
+			//outputFile.print(token.getToken());
 			//System.out.print(token.getToken());
 		}
 		token = scanner.getNextToken();
 		while((token == null || isMeta(token))){
 			if(token == null){
-				outputFile.print(" ");
+				//outputFile.print(" ");
 			}else{
 				System.out.println(token.getToken());
 				outputFile.println(token.getToken());
@@ -116,7 +116,7 @@ public class Parser {
 				token = nextToken();
 				return true;
 			}else if(token.getToken().equals("{")){
-				System.out.println(tokenStack.peek().getToken());
+				outputFile.println(tokenStack.peek().getToken());
 				token = nextToken();
 				symbolTable = new SymbolTable(symbolTable);
 				if(data_decls_prime()) {
@@ -135,11 +135,11 @@ public class Parser {
 								st = pop + "\n" + st;
 							}
 						}
-						System.out.println("int local[" + symbolTable.getLocalCount() + "];");
-						System.out.print(parameters);
-						System.out.print(st);
+						outputFile.println("int local[" + symbolTable.getLocalCount() + "];");
+						outputFile.print(parameters);
+						outputFile.print(st);
 						if(isSymbol(token) && token.getToken().equals("}")){
-							System.out.println(tokenStack.peek().getToken());
+							outputFile.println(tokenStack.peek().getToken());
 							symbolTable = symbolTable.parent;
 							functions++;
 							token = nextToken();
@@ -156,11 +156,11 @@ public class Parser {
 	private boolean func_decl(){
 		if(isSymbol(token) && token.getToken().equals("(")){
 			String func = genStack.pop();
-			System.out.print(genStack.pop() + " " + func + tokenStack.peek().getToken());
+			outputFile.print(genStack.pop() + " " + func + tokenStack.peek().getToken());
 			token = nextToken();
 			if(parameter_list()){
 				if(isSymbol(token) && token.getToken().equals(")")){
-					System.out.print(tokenStack.peek().getToken());
+					outputFile.print(tokenStack.peek().getToken());
 					token = nextToken();
 					return true;
 				}
@@ -175,15 +175,15 @@ public class Parser {
 			genStack.pop();
 			if(isID(token)){
 				String funcName = tokenStack.pop().getToken();
-				System.out.print(tokenStack.pop().getToken() + " ");
-				System.out.print(funcName);
+				outputFile.print(tokenStack.pop().getToken() + " ");
+				outputFile.print(funcName);
 				token = nextToken();
 				if(isSymbol(token) && token.getToken().equals("(")){
-					System.out.print(tokenStack.peek().getToken());
+					outputFile.print(tokenStack.peek().getToken());
 					token = nextToken();
 					if(parameter_list()){
 						if(isSymbol(token) && token.getToken().equals(")")){
-							System.out.print(tokenStack.peek().getToken());
+							outputFile.print(tokenStack.peek().getToken());
 							token = nextToken();
 							return true;
 						}
@@ -235,7 +235,7 @@ public class Parser {
 		if(non_empty_list()){
 			gen += genStack.pop();
 		}
-		System.out.print(gen);
+		outputFile.print(gen);
 		return true;
 	}
 
@@ -877,11 +877,10 @@ public class Parser {
 				String e_prime = genStack.pop();
 				if(e_prime.length() > 0){
 					gen += e_prime + ";";
-					String loc = "local[" + symbolTable.getLocalCount() + "]";
-					gen = loc + " = " + gen;
-					symbolTable.incLocalCount();
-					genStack.push(gen.toString());
-					gen = loc;
+                    String loc = genStack.pop();
+                    genStack.push(loc + " = " + gen);
+                    genStack.push(loc);
+                    return true;
 				}
 				genStack.push(gen);
 				return true;
@@ -892,21 +891,20 @@ public class Parser {
 
 	//<expression prime> --> <addop> <term> <expression prime> | empty
 	private boolean expression_prime(){
+        String loc = "local[" + symbolTable.getLocalCount() + "]";
 		String gen = "";
-		if(addop()){
+        if(addop()){
+            symbolTable.incLocalCount();
 			gen += genStack.pop();
 			if(term()){
 				gen += genStack.pop();
 				if(expression_prime()){
 					String e_prime = genStack.pop();
 					if(e_prime.length() > 0){
-						gen = gen.split(" ")[2] + e_prime + ";";
-						String loc = "local[" + symbolTable.getLocalCount() + "]";
-						gen = loc + " = " + gen;
-						symbolTable.incLocalCount();
-						genStack.push(gen.toString());
-						gen = " + " + loc;
+						gen = "\n" + e_prime + ";";
+                        loc = genStack.pop();
 					}
+                    genStack.push(loc);
 					genStack.push(gen);
 					return true;
 				}
@@ -928,20 +926,21 @@ public class Parser {
 
 	//<term> --> <factor> <term prime>
 	private boolean term(){
+        //String loc = "local[" + symbolTable.getLocalCount() + "]";
 		String gen = "";
 		if(factor()){
 			gen += genStack.pop();
 			if(term_prime()){
 				String t_prime = genStack.pop();
 				if(t_prime.length() > 0){
-					gen += t_prime + ";";
-					String loc = "local[" + symbolTable.getLocalCount() + "]";
-					gen = loc + " = " + gen;
-					symbolTable.incLocalCount();
-					genStack.push(gen.toString());
-					gen = loc;
-				}
-				genStack.push(gen);
+                    gen += t_prime + ";";
+                    String loc = genStack.pop();
+                    String reorder = genStack.pop();
+                    genStack.push(loc + " = " + gen);
+                    genStack.push(reorder);
+                    return true;
+                }
+                genStack.push(gen);
 				return true;
 			}
 		}
@@ -950,22 +949,23 @@ public class Parser {
 
 	//<term prime> --> <mulop> <factor> <term prime> | empty
 	private boolean term_prime(){
+        String loc = "local[" + symbolTable.getLocalCount() + "]";
+        String lastLoc = loc;
 		String gen = "";
 		if(mulop()){
+            symbolTable.incLocalCount();
 			gen += genStack.pop();
 			if(factor()){
 				gen += genStack.pop();
 				if(term_prime()){
 					String t_prime = genStack.pop();
 					if(t_prime.length() > 0){
-						gen = gen.split(" ")[2] + t_prime + ";";
-						String loc = "local[" + symbolTable.getLocalCount() + "]";
-						gen = loc + " = " + gen;
-						symbolTable.incLocalCount();
-						genStack.push(gen.toString());
-						gen = " * " + loc;
+                        gen += ";\n" + genStack.pop() + " = " + loc +  t_prime;
+                        lastLoc = genStack.pop();
 					}
-					genStack.push(gen);
+                    genStack.push(lastLoc);
+                    genStack.push(loc);
+                    genStack.push(gen);
 					return true;
 				}
 			}
