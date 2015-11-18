@@ -6,6 +6,7 @@
 void recursedigit(int n) {
     int on;
     if (0 == n) {
+	on = 1 + 2 / 3 - 4 * 5;
 	return;
     }
     on = 0;

@@ -3,10 +3,10 @@
 #define write(x) printf("%d\n",x)
 int main(){
 int local[9];
-local[2] = 1 * 2;
-local[3] = local[2] * 3;
-local[4] = local[3] * 4;
-local[5] = local[4] * 5;
+local[2] = 1 + 2;
+local[3] = local[2] + 3;
+local[4] = local[3] + 4;
+local[5] = local[4] + 5;
 local[0] = local[5];
 read(local[0]);
 local[6] = local[0] + 1;

@@ -65,7 +65,7 @@ public class Parser {
 			if(token == null){
 				//outputFile.print(" ");
 			}else{
-				System.out.println(token.getToken());
+				//System.out.println(token.getToken());
 				outputFile.println(token.getToken());
 			}
 
@@ -808,7 +808,7 @@ public class Parser {
 			gen += tokenStack.peek().getToken();
 			token = nextToken();
 			if(after_return()){
-				gen += " " + genStack.pop();
+				gen +=  genStack.pop();
 				genStack.push(gen);
 				return true;
 			}
@@ -823,13 +823,14 @@ public class Parser {
 			gen += genStack.pop();
 			if(isNumeric(gen)){
 				String loc = "local[" + symbolTable.getLocalCount() + "]";
+				//String loc = genStack.pop();
 				genStack.push(loc + " = " + gen + ";");
 				gen = " " + loc;
-				genStack.push(gen);
+				//genStack.push(gen);
 			}
 			if(isSymbol(token) && token.getToken().equals(";")){
 				gen += ";";
-				genStack.push(gen);
+				genStack.push(" " + gen);
 				token = nextToken();
 				return true;
 			}
@@ -878,8 +879,9 @@ public class Parser {
 				if(e_prime.length() > 0){
 					gen += e_prime + ";";
                     String loc = genStack.pop();
+                    String reorder = genStack.pop();
                     genStack.push(loc + " = " + gen);
-                    genStack.push(loc);
+                    genStack.push(reorder);
                     return true;
 				}
 				genStack.push(gen);
@@ -892,6 +894,7 @@ public class Parser {
 	//<expression prime> --> <addop> <term> <expression prime> | empty
 	private boolean expression_prime(){
         String loc = "local[" + symbolTable.getLocalCount() + "]";
+        String lastLoc = loc;
 		String gen = "";
         if(addop()){
             symbolTable.incLocalCount();
@@ -901,9 +904,10 @@ public class Parser {
 				if(expression_prime()){
 					String e_prime = genStack.pop();
 					if(e_prime.length() > 0){
-						gen = "\n" + e_prime + ";";
-                        loc = genStack.pop();
+                        gen += ";\n" + genStack.pop() + " = " + loc + e_prime;
+                        lastLoc = genStack.pop();
 					}
+                    genStack.push(lastLoc);
                     genStack.push(loc);
 					genStack.push(gen);
 					return true;

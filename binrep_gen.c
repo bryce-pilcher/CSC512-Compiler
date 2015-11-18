@@ -3,24 +3,29 @@
 #define write(x) printf("%d\n",x)
 #define print(x) printf(x)
 void recursedigit(int n){
-int local[6];
+int local[10];
 local[1] = n;
 if(0==local[1]) goto c0;
 goto c1;
 c0:;
-return ;
+local[3] = 2 / 3;
+local[5] = 4 * 5;
+local[2] = 1 + local[3];
+local[4] = local[2] - local[5];
+local[0] = local[4];
+return;
 c1:;
 local[0] = 0;
-local[3] = local[1] / 2;
-local[4] = local[3] * 2;
-local[2] = local[1] - local[4];
-if(0!=local[2]) goto c2;
+local[7] = local[1] / 2;
+local[8] = local[7] * 2;
+local[6] = local[1] - local[8];
+if(0!=local[6]) goto c2;
 goto c3;
 c2:;
 local[0] = 1;
 c3:;
-local[5] = local[1] / 2;
-recursedigit(local[5]);
+local[9] = local[1] / 2;
+recursedigit(local[9]);
 if(0==local[0]) goto c4;
 goto c5;
 c4:;
