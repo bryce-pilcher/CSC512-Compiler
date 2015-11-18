@@ -9,6 +9,7 @@ public class SymbolTable {
     SymbolTable parent;
     HashMap<String, String> symbols;
     int localCount = 0;
+    int globalCount = 0;
     int labelCount = 0;
 
     public SymbolTable(){
@@ -38,6 +39,14 @@ public class SymbolTable {
 
     public void incLocalCount(){
         this.localCount++;
+    }
+
+    public int getGlobalCount(){
+        return globalCount;
+    }
+
+    public void incGlobalCount(){
+        this.globalCount++;
     }
 
     public int getLabelCount(){

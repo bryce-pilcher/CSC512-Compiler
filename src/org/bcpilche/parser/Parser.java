@@ -113,6 +113,7 @@ public class Parser {
 	private boolean after_func_decl(){
 		if(isSymbol(token)) {
 			if(token.getToken().equals(";")){
+                outputFile.print(";\n");
 				token = nextToken();
 				return true;
 			}else if(token.getToken().equals("{")){
@@ -209,7 +210,15 @@ public class Parser {
 
 	//<data or func> --> <data decls> | <func list>
 	private boolean data_or_func(){
-		return data_decls() && func_list();
+		if(data_decls()){
+            if(symbolTable.getGlobalCount() > 0){
+                outputFile.print("int global[" + symbolTable.getGlobalCount() + "];\n");
+            }
+            if(func_list()){
+                return true;
+            }
+        }
+        return false;
 	}
 
 	//<type name> --> int | void | binary | decimal
@@ -281,6 +290,7 @@ public class Parser {
 				gen += genStack.pop();
 				if(isID(token)){
 					gen += tokenStack.peek().getToken();
+                    genStack.push(tokenStack.peek().getToken());
 					token = nextToken();
 					if(non_empty_list_prime()){
 						gen += genStack.pop();
@@ -381,10 +391,52 @@ public class Parser {
 
 	//<id after ID> --> left_bracket <expression> right_bracket | empty
 	private boolean id_after_id(){
-		if(isSymbol(token) && token.getToken().equals("[")){
+		String gen = "";
+        String[] array = null;
+        if(isSymbol(token) && token.getToken().equals("[")){
+            String var = genStack.pop();
+            boolean init = !genStack.empty() && genStack.peek().equals("int");
 			token = nextToken();
 			if(expression()){
+                String value = genStack.pop();
+                if(isNumeric(value)) {
+                    int val = Integer.parseInt(value);
+                    if (init) {
+                        array = getArrayVar(var);
+                        gen =  array[0] + "[";
+                        if (symbolTable.parent == null) {
+                            for (int i = 0; i < val; i++) {
+                                symbolTable.incGlobalCount();
+                            }
+                        } else {
+                            for (int i = 0; i < val; i++) {
+                                symbolTable.incLocalCount();
+                            }
+                        }
+                    } else {
+                        array = var.split(" ");
+                        var = "";
+                        int base = Integer.parseInt(array[1]);
+                        gen += array[0] + "[" + Integer.toString((base + val));
+                    }
+                } else {
+                    array = var.split(" ");
+                    gen = array[0] + "[";
+                    if(Integer.parseInt(array[1]) > 0){
+                        String loc = "local[" + symbolTable.getLocalCount() + "]";
+                        symbolTable.incLocalCount();
+                        String eq = loc + " = " + value + " + " + array[1] + ";";
+                        genStack.push(eq);
+                        gen += loc;
+                    }else {
+                        gen += value;
+                    }
+                    var = "";
+                }
 				if(isSymbol(token) && token.getToken().equals("]")) {
+                    gen += "]";
+                    genStack.push(var);
+                    genStack.push(gen);
 					token = nextToken();
 					return true;
 				}else{
@@ -823,6 +875,7 @@ public class Parser {
 			gen += genStack.pop();
 			if(isNumeric(gen)){
 				String loc = "local[" + symbolTable.getLocalCount() + "]";
+                symbolTable.incLocalCount();
 				//String loc = genStack.pop();
 				genStack.push(loc + " = " + gen + ";");
 				gen = " " + loc;
@@ -1051,15 +1104,52 @@ public class Parser {
 			}
 			return false;
 		}else if(isSymbol(token) && token.getToken().equals("[")){
-			gen = getLocalVar(tokenStack.peek().getToken()) + "[";
-			token = nextToken();
-			if(expression()){
-				gen += genStack.pop();
-				if(isSymbol(token) && token.getToken().equals("]")){
-					gen += "]";
-					token = nextToken();
-					genStack.push(gen);
-					return true;
+            String[] array = getArrayVar(id);
+            String var = array[0];
+            boolean init = genStack.peek().equals("int");
+            token = nextToken();
+            if(expression()){
+                String value = genStack.pop();
+                if(isNumeric(value)) {
+                    int val = Integer.parseInt(value);
+                    if (init) {
+                        array = getArrayVar(var);
+                        gen =  array[0] + "[";
+                        if (symbolTable.parent == null) {
+                            for (int i = 0; i < val; i++) {
+                                symbolTable.incGlobalCount();
+                            }
+                        } else {
+                            for (int i = 0; i < val; i++) {
+                                symbolTable.incLocalCount();
+                            }
+                        }
+                    } else {
+                        array = var.split(" ");
+                        var = "";
+                        int base = Integer.parseInt(array[1]);
+                        gen += array[0] + "[" + Integer.toString((base + val));
+                    }
+                } else {
+                    array = var.split(" ");
+                    gen = array[0] + "[";
+                    if(Integer.parseInt(array[1]) > 0){
+                        String loc = "local[" + symbolTable.getLocalCount() + "]";
+                        symbolTable.incLocalCount();
+                        String eq = loc + " = " + value + " + " + array[1] + ";";
+                        genStack.push(eq);
+                        gen += loc;
+                    }else {
+                        gen += value;
+                    }
+                    var = "";
+                }
+                if(isSymbol(token) && token.getToken().equals("]")) {
+                    gen += "]";
+                    genStack.push(var);
+                    genStack.push(gen);
+                    token = nextToken();
+                    return true;
 				}
 			}
 			return false;
@@ -1097,22 +1187,59 @@ public class Parser {
 
 	private String getLocalVar(String var){
 		SymbolTable st = symbolTable;
-		String local = st.symbols.get(var);
-		while(local == null){
+		String gen = st.symbols.get(var);
+		while(gen == null){
 			st = st.getParent();
 			if(st == null){
 				break;
 			}
-			local = st.symbols.get(var);
+			gen = st.symbols.get(var);
 		}
 
-		if(local == null){
-			local = "local[" + symbolTable.getLocalCount() + "]";
-			symbolTable.symbols.put(var,local);
-			symbolTable.incLocalCount();
+		if(gen == null){
+            if(symbolTable.parent == null){
+                gen = "global[" + symbolTable.getGlobalCount() + "]";
+                symbolTable.symbols.put(var,gen);
+                symbolTable.incGlobalCount();
+            }else {
+                gen = "local[" + symbolTable.getLocalCount() + "]";
+                symbolTable.symbols.put(var, gen);
+                symbolTable.incLocalCount();
+            }
 		}
-		return local;
+		return gen;
 	}
+
+    private String[] getArrayVar(String var){
+        String[] array = new String[2];
+        SymbolTable st = symbolTable;
+        String gen = st.symbols.get(var);
+        String val = "";
+        while(gen == null){
+            st = st.getParent();
+            if(st == null){
+                break;
+            }
+            gen = st.symbols.get(var);
+        }
+
+        if(gen == null){
+            if(symbolTable.parent == null){
+                val = Integer.toString(symbolTable.getGlobalCount());
+                gen = "global";
+                symbolTable.symbols.put(var, gen + " " + val);
+            }else {
+                val = Integer.toString(symbolTable.getLocalCount());
+                gen = "local";
+                symbolTable.symbols.put(var, gen + " " + val);
+            }
+        }else{
+            array = gen.split(" ");
+        }
+        array[0] = gen;
+        array[1] = val;
+        return array;
+    }
 
 	private boolean isNumeric(String str){
 		try{

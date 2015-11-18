@@ -27,5 +27,5 @@ int main(void)
     foo();
     print("Called foo().\n");
 
-    x == y;
+    x = y;
 }
