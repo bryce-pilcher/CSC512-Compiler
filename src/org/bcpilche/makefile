@@ -12,6 +12,7 @@ CLASSES = \
         StringToken.java \
         MetaToken.java \
         SymbolToken.java \
+	EOFToken.java \
 	Scanner.java \
 	SymbolTable.java \
 	Parser.java \
